@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAM-PRO DKV XI - Game & Simulasi Fotografi Interaktif</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        camera: {
+                            bg: '#121316',
+                            card: '#1c1e24',
+                            accent: '#ff4757',
+                            hud: '#00ff88',
+                            warning: '#ffa500',
+                            blue: '#2ed573'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0c0e;
+            color: #e2e8f0;
+            user-select: none;
+        }
+        .viewfinder-grid {
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+            background-size: 33.333% 33.333%;
+        }
+        .shutter-btn {
+            box-shadow: 0 0 15px rgba(255, 71, 87, 0.4), inset 0 2px 5px rgba(255,255,255,0.5);
+            transition: all 0.1s ease;
+        }
+        .shutter-btn:active {
+            transform: scale(0.92);
+            box-shadow: 0 0 5px rgba(255, 71, 87, 0.8);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1a1c23;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #3b4252;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased h-screen overflow-hidden flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-camera-card border-b border-gray-800 px-4 py-2.5 flex items-center justify-between z-20 shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="bg-gradient-to-tr from-red-600 to-red-400 p-2 rounded-lg shadow-lg">
+                <i class="fa-solid font-bold fa-camera-retro text-xl text-white"></i>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-base md:text-lg tracking-wide text-white flex items-center gap-2">
+                    CAM-PRO <span class="bg-red-500/20 text-red-400 text-xs px-2 py-0.5 rounded border border-red-500/30 font-mono">DKV XI</span>
+                </h1>
+                <p class="text-xs text-gray-400 hidden sm:block">Laboratorium Simulasi Fotografi & Deep Learning Segitiga Eksposur</p>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-900/80 p-1 rounded-xl border border-gray-800">
+            <button id="tab-mission" onclick="switchMode('mission')" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium transition flex items-center gap-2 bg-red-500 text-white shadow">
+                <i class="fa-solid fa-trophy"></i>
+                <span>Mode Misi</span>
+            </button>
+            <button id="tab-sandbox" onclick="switchMode('sandbox')" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium text-gray-400 hover:text-white transition flex items-center gap-2">
+                <i class="fa-solid fa-sliders"></i>
+                <span>Mode Bebas</span>
+            </button>
+            <button id="tab-theory" onclick="switchMode('theory')" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium text-gray-400 hover:text-white transition flex items-center gap-2">
+                <i class="fa-solid fa-book-open"></i>
+                <span>Modul & Teori</span>
+            </button>
+        </div>
+
+        <!-- Sound & Progress Stats -->
+        <div class="flex items-center space-x-3">
+            <div class="hidden md:flex items-center gap-2 bg-gray-900 px-3 py-1.5 rounded-lg border border-gray-800 font-mono text-xs text-yellow-400">
+                <i class="fa-solid fa-star text-amber-400"></i>
+                <span>Skor: <strong id="total-score">0</strong> XP</span>
+            </div>
+            <button id="btn-sound" onclick="toggleAudio()" class="w-9 h-9 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 flex items-center justify-center transition border border-gray-700" title="Suara Shutter">
+                <i class="fa-solid fa-volume-high" id="sound-icon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+
+        <!-- LEFT/TOP: Viewfinder & Scene Canvas Display -->
+        <div class="flex-1 flex flex-col bg-black relative p-2 md:p-4 justify-between overflow-hidden">
+            
+            <!-- Camera Viewfinder Top Bar Overlay -->
+            <div class="absolute top-4 left-4 right-4 z-10 flex justify-between items-start pointer-events-none">
+                <div class="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 font-mono text-xs text-camera-hud flex items-center gap-3">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle text-red-500 animate-pulse text-[8px]"></i> LIVE VIEW</span>
+                    <span id="hud-mode-name" class="text-white/80 border-l border-white/20 pl-2">Misi 1</span>
+                    <span id="hud-scene-name" class="text-yellow-400 font-sans border-l border-white/20 pl-2">Subjek Bergerak</span>
+                </div>
+
+                <div class="flex items-center gap-2 pointer-events-auto">
+                    <button onclick="toggleGrid()" id="btn-grid" class="bg-black/60 hover:bg-black/80 backdrop-blur-md text-white/70 hover:text-white px-2.5 py-1.5 rounded-lg border border-white/10 text-xs transition flex items-center gap-1">
+                        <i class="fa-solid fa-border-all"></i> <span class="hidden sm:inline">Grid 3x3</span>
+                    </button>
+                    <button onclick="toggleHistogram()" id="btn-histogram" class="bg-black/60 hover:bg-black/80 backdrop-blur-md text-white/70 hover:text-white px-2.5 py-1.5 rounded-lg border border-white/10 text-xs transition flex items-center gap-1">
+                        <i class="fa-solid fa-chart-area"></i> <span class="hidden sm:inline">Histogram</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Central Canvas Viewfinder Frame -->
+            <div class="relative w-full h-full flex items-center justify-center my-auto overflow-hidden rounded-xl border border-gray-800 shadow-2xl bg-gray-950">
+                <canvas id="camera-canvas" class="w-full h-full object-contain cursor-crosshair"></canvas>
+                
+                <!-- Rule of Thirds Grid Overlay -->
+                <div id="grid-overlay" class="absolute inset-0 viewfinder-grid pointer-events-none opacity-0 transition-opacity duration-200"></div>
+
+                <!-- Histogram Floating Box -->
+                <div id="histogram-box" class="absolute bottom-16 left-4 bg-black/80 backdrop-blur-md border border-white/20 p-2 rounded-lg opacity-0 pointer-events-none transition-opacity duration-200 z-10 w-36 h-24">
+                    <div class="text-[10px] font-mono text-gray-400 mb-1 flex justify-between">
+                        <span>HISTOGRAM</span>
+                        <span id="histo-status" class="text-green-400">OK</span>
+                    </div>
+                    <canvas id="histogram-canvas" class="w-full h-16"></canvas>
+                </div>
+
+                <!-- Focus Reticle Box (Animated Click Indicator) -->
+                <div id="focus-box" class="absolute w-16 h-16 border border-camera-hud rounded-sm pointer-events-none opacity-0 transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+                    <div class="w-1.5 h-1.5 bg-camera-hud rounded-full"></div>
+                </div>
+
+                <!-- Exposure Warning Notice Overlay -->
+                <div id="exposure-badge" class="absolute top-16 left-1/2 transform -translate-x-1/2 bg-red-600/90 text-white font-mono text-xs px-3 py-1 rounded-full border border-red-400 opacity-0 transition-opacity pointer-events-none">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> OVEREXPOSED
+                </div>
+            </div>
+
+            <!-- Viewfinder Bottom Live HUD Settings -->
+            <div class="bg-gray-900/90 backdrop-blur-md border border-gray-800 rounded-xl p-3 mt-2 flex flex-wrap items-center justify-between gap-2 font-mono z-10">
+                <div class="flex items-center gap-4 text-xs sm:text-sm">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-gray-400 font-sans text-xs">Diafragma:</span>
+                        <span id="hud-aperture" class="text-cyan-400 font-bold">f/4.0</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-gray-400 font-sans text-xs">Rana (Shutter):</span>
+                        <span id="hud-shutter" class="text-yellow-400 font-bold">1/250s</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-gray-400 font-sans text-xs">ISO:</span>
+                        <span id="hud-iso" class="text-green-400 font-bold">100</span>
+                    </div>
+                </div>
+
+                <!-- Exposure Metering Scale (-3 to +3 EV) -->
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-gray-400 font-sans">EV Meter:</span>
+                    <div class="flex items-center bg-black/60 px-2 py-1 rounded border border-gray-800">
+                        <span class="text-[10px] text-gray-400 mr-1">-3</span>
+                        <div class="w-28 sm:w-36 h-2 bg-gray-800 rounded relative overflow-hidden flex items-center">
+                            <!-- Center Indicator Marker -->
+                            <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gray-500 transform -translate-x-1/2 z-10"></div>
+                            <!-- Live EV Value Bar -->
+                            <div id="ev-indicator" class="h-full bg-green-400 transition-all duration-150 absolute" style="left: 50%; width: 4px;"></div>
+                        </div>
+                        <span class="text-[10px] text-gray-400 ml-1">+3</span>
+                    </div>
+                    <span id="ev-value-text" class="text-xs text-white font-bold min-w-[32px] text-right">0.0</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT: Camera Physical Controls & Mission Sidebar -->
+        <div class="w-full md:w-96 bg-camera-card border-l border-gray-800 flex flex-col h-auto md:h-full overflow-y-auto custom-scrollbar">
+
+            <!-- MODE 1: Mission Panel -->
+            <div id="panel-mission" class="p-4 space-y-4">
+                <div class="bg-gray-900/80 rounded-xl p-3.5 border border-gray-800 shadow">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-bullseye"></i> Briefing Klien DKV
+                        </span>
+                        <span id="mission-level-badge" class="bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded font-mono font-bold">Level 1/5</span>
+                    </div>
+                    <h3 id="mission-title" class="text-sm font-bold text-white mb-1">Potret Olahragawan Lari</h3>
+                    <p id="mission-desc" class="text-xs text-gray-300 leading-relaxed mb-3">
+                        Klien menginginkan foto atlet lari yang **tajam tanpa blur** pada siang hari. Pastikan cahaya tidak terlalu gelap atau terlalu terang!
+                    </p>
+
+                    <!-- Requirements Checklist -->
+                    <div class="space-y-1.5 text-xs bg-black/40 p-2.5 rounded-lg border border-gray-800">
+                        <div id="req-exposure" class="flex items-center justify-between text-gray-400">
+                            <span><i class="fa-regular fa-circle mr-1.5"></i> Eksposur Seimbang (-0.5s/d +0.5 EV)</span>
+                            <i class="fa-solid fa-xmark text-red-500"></i>
+                        </div>
+                        <div id="req-sharpness" class="flex items-center justify-between text-gray-400">
+                            <span><i class="fa-regular fa-circle mr-1.5"></i> Pembekuan Gerak (Freeze Motion)</span>
+                            <i class="fa-solid fa-xmark text-red-500"></i>
+                        </div>
+                        <div id="req-noise" class="flex items-center justify-between text-gray-400">
+                            <span><i class="fa-regular fa-circle mr-1.5"></i> Kebisingan / Noise Minim</span>
+                            <i class="fa-solid fa-xmark text-red-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODE 2: Sandbox Control (Dynamic Scene Selector) -->
+            <div id="panel-sandbox" class="p-4 hidden space-y-3">
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Pilih Subjek / Skenario Simulasi</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="changeSandboxScene('runner')" class="sandbox-scene-btn p-2 rounded-lg bg-gray-900 border border-gray-800 text-left text-xs text-white hover:border-red-500 transition active">
+                        <i class="fa-solid fa-person-running text-red-400 mb-1 block text-base"></i>
+                        <span class="font-bold block">Pelari (Aksi)</span>
+                        <span class="text-[10px] text-gray-400">Uji Kecepatan Rana</span>
+                    </button>
+                    <button onclick="changeSandboxScene('portrait')" class="sandbox-scene-btn p-2 rounded-lg bg-gray-900 border border-gray-800 text-left text-xs text-white hover:border-red-500 transition">
+                        <i class="fa-solid fa-user text-cyan-400 mb-1 block text-base"></i>
+                        <span class="font-bold block">Model Portret</span>
+                        <span class="text-[10px] text-gray-400">Uji Bokeh / DoF</span>
+                    </button>
+                    <button onclick="changeSandboxScene('waterfall')" class="sandbox-scene-btn p-2 rounded-lg bg-gray-900 border border-gray-800 text-left text-xs text-white hover:border-red-500 transition">
+                        <i class="fa-solid fa-water text-blue-400 mb-1 block text-base"></i>
+                        <span class="font-bold block">Air Terjun</span>
+                        <span class="text-[10px] text-gray-400">Motion Blur Air</span>
+                    </button>
+                    <button onclick="changeSandboxScene('night')" class="sandbox-scene-btn p-2 rounded-lg bg-gray-900 border border-gray-800 text-left text-xs text-white hover:border-red-500 transition">
+                        <i class="fa-solid fa-city text-yellow-400 mb-1 block text-base"></i>
+                        <span class="font-bold block">Malam Hari</span>
+                        <span class="text-[10px] text-gray-400">Uji Noise & ISO</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- MODE 3: Theory & Module Panel -->
+            <div id="panel-theory" class="p-4 hidden space-y-4 text-xs text-gray-300 leading-relaxed">
+                <div class="bg-gray-900 p-3 rounded-xl border border-gray-800 space-y-2">
+                    <h3 class="font-bold text-sm text-red-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Concept: Segitiga Eksposur
+                    </h3>
+                    <p>Segitiga Eksposur adalah elemen dasar teknik fotografi yang mengatur jumlah cahaya yang masuk ke sensor kamera.</p>
+                </div>
+
+                <!-- Accordion Items -->
+                <div class="space-y-2">
+                    <div class="bg-gray-900 rounded-lg p-2.5 border border-gray-800">
+                        <h4 class="font-bold text-cyan-400 flex items-center justify-between cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                            <span>1. Diafragma / Aperture (f-stop)</span>
+                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        </h4>
+                        <div class="mt-2 text-gray-400 space-y-1">
+                            <p>• Nilai f kecil (misal f/1.8): Bukaan besar &rarr; foto terang & latar belakang <strong>Blur (Bokeh / Ruang Tajam Sempit)</strong>.</p>
+                            <p>• Nilai f besar (misal f/16): Bukaan kecil &rarr; foto gelap & latar belakang <strong>Tajam (Ruang Tajam Luas)</strong>.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-900 rounded-lg p-2.5 border border-gray-800">
+                        <h4 class="font-bold text-yellow-400 flex items-center justify-between cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                            <span>2. Kecepatan Rana / Shutter Speed</span>
+                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        </h4>
+                        <div class="mt-2 text-gray-400 space-y-1">
+                            <p>• Rana Cepat (1/1000s): Membekukan gerakan (Freeze Motion), cahaya masuk sedikit.</p>
+                            <p>• Rana Lambat (1/2s): Membuat jejak gerakan (Motion Blur / Silk Water), cahaya masuk lebih banyak.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-900 rounded-lg p-2.5 border border-gray-800">
+                        <h4 class="font-bold text-green-400 flex items-center justify-between cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                            <span>3. Sensitivitas Sensor / ISO</span>
+                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        </h4>
+                        <div class="mt-2 text-gray-400 space-y-1">
+                            <p>• ISO Rendah (100): Gambar bersih tajam tanpa bintik (Noise), butuh cahaya terang.</p>
+                            <p>• ISO Tinggi (6400): Sangat sensitif cahaya gelap, namun menghasilkan efek bintik kasar (Bintik Noise/Grain).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CAMERA MANUAL DIAL CONTROLS (Always Visible) -->
+            <div class="p-4 bg-gray-900/90 border-t border-gray-800 space-y-4 mt-auto">
+                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-sliders text-red-400"></i> Kontrol Manual Kamera DSLR
+                </h4>
+
+                <!-- Control 1: Aperture Dial Slider -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-mono">
+                        <span class="text-gray-300 font-sans"><i class="fa-solid fa-circle-dot text-cyan-400 mr-1"></i> Aperture (Diafragma)</span>
+                        <span id="label-aperture" class="text-cyan-400 font-bold">f/4.0</span>
+                    </div>
+                    <input type="range" id="slider-aperture" min="0" max="7" step="1" value="3" oninput="updateCameraSettings()" class="w-full accent-cyan-400 bg-gray-800 rounded-lg h-2 cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-gray-500 font-mono">
+                        <span>f/1.4 (Bokeh Sempit)</span>
+                        <span>f/22 (Tajam Luas)</span>
+                    </div>
+                </div>
+
+                <!-- Control 2: Shutter Speed Dial Slider -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-mono">
+                        <span class="text-gray-300 font-sans"><i class="fa-solid fa-gauge-high text-yellow-400 mr-1"></i> Shutter Speed (Rana)</span>
+                        <span id="label-shutter" class="text-yellow-400 font-bold">1/250s</span>
+                    </div>
+                    <input type="range" id="slider-shutter" min="0" max="8" step="1" value="5" oninput="updateCameraSettings()" class="w-full accent-yellow-400 bg-gray-800 rounded-lg h-2 cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-gray-500 font-mono">
+                        <span>1s (Motion Blur)</span>
+                        <span>1/4000s (Beku)</span>
+                    </div>
+                </div>
+
+                <!-- Control 3: ISO Sensitivity Slider -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-mono">
+                        <span class="text-gray-300 font-sans"><i class="fa-solid fa-microchip text-green-400 mr-1"></i> ISO (Sensitivitas Sensor)</span>
+                        <span id="label-iso" class="text-green-400 font-bold">ISO 100</span>
+                    </div>
+                    <input type="range" id="slider-iso" min="0" max="6" step="1" value="0" oninput="updateCameraSettings()" class="w-full accent-green-400 bg-gray-800 rounded-lg h-2 cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-gray-500 font-mono">
+                        <span>100 (Bersih)</span>
+                        <span>6400 (Bintik Noise)</span>
+                    </div>
+                </div>
+
+                <!-- Action Button: TAKE PHOTO (Shutter Release) -->
+                <div class="pt-2">
+                    <button onclick="takePicture()" class="shutter-btn w-full bg-gradient-to-r from-red-600 via-red-500 to-red-600 hover:from-red-500 hover:to-red-400 text-white font-extrabold py-3 px-4 rounded-xl shadow-lg flex items-center justify-center gap-3 text-sm tracking-wide transition transform active:scale-95 border border-red-400/30">
+                        <i class="fa-solid fa-circle text-xs animate-ping"></i>
+                        <span>JEPRET FOTO (SHUTTER)</span>
+                        <i class="fa-solid fa-camera"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- RESULT & DEEP LEARNING REFLECTION MODAL -->
+    <div id="modal-result" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-camera-card border border-gray-700 rounded-2xl max-w-2xl w-full p-5 md:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            
+            <div class="flex justify-between items-start border-b border-gray-800 pb-3">
+                <div>
+                    <span id="result-status-tag" class="bg-green-500/20 text-green-400 font-mono text-xs px-2.5 py-1 rounded-md border border-green-500/30 font-bold">EKSPOSUR SEMPURNA</span>
+                    <h2 class="text-lg md:text-xl font-bold text-white mt-1">Hasil Evaluasi Jepretan Kamera</h2>
+                </div>
+                <button onclick="closeResultModal()" class="w-8 h-8 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Preview Photo Display Box -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                <div class="relative rounded-xl overflow-hidden border-2 border-gray-700 bg-black shadow-inner aspect-4/3">
+                    <canvas id="captured-result-canvas" class="w-full h-full object-contain"></canvas>
+                    <div id="result-star-rating" class="absolute bottom-2 right-2 bg-black/70 backdrop-blur-md px-2 py-1 rounded-lg border border-yellow-500/40 text-yellow-400 text-xs flex gap-1">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                </div>
+
+                <!-- Score Breakdown -->
+                <div class="space-y-3 bg-gray-900/90 p-3.5 rounded-xl border border-gray-800 text-xs">
+                    <h4 class="font-bold text-gray-300 border-b border-gray-800 pb-1.5 flex justify-between">
+                        <span>Analisis Parameter Fotografi</span>
+                        <span id="result-score-percent" class="text-yellow-400 font-mono font-bold">95%</span>
+                    </h4>
+
+                    <div class="space-y-2">
+                        <div>
+                            <div class="flex justify-between text-gray-400 mb-0.5">
+                                <span>Tingkat Kecerahan (Exposure)</span>
+                                <span id="eval-exposure-text" class="text-white font-mono font-bold">Seimbang</span>
+                            </div>
+                            <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                                <div id="eval-exposure-bar" class="bg-green-400 h-full w-full"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-gray-400 mb-0.5">
+                                <span>Ketajaman Subjek (Motion)</span>
+                                <span id="eval-motion-text" class="text-white font-mono font-bold">Fokus Tajam</span>
+                            </div>
+                            <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                                <div id="eval-motion-bar" class="bg-green-400 h-full w-full"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-gray-400 mb-0.5">
+                                <span>Kebersihan Gambar (Noise)</span>
+                                <span id="eval-noise-text" class="text-white font-mono font-bold">Sangat Jernih</span>
+                            </div>
+                            <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                                <div id="eval-noise-bar" class="bg-green-400 h-full w-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DEEP LEARNING REFLECTION SECTION -->
+            <div class="bg-red-950/30 border border-red-500/30 p-4 rounded-xl space-y-2 text-xs">
+                <h4 class="font-bold text-red-400 flex items-center gap-1.5 text-sm">
+                    <i class="fa-solid fa-brain"></i> Lembar Refleksi Deep Learning (Siswa DKV)
+                </h4>
+                <p id="deep-learning-question" class="text-gray-200 font-medium leading-relaxed">
+                    Mengapa pengaturan Shutter Speed 1/1000s dipilih saat memotret objek yang bergerak cepat?
+                </p>
+                <div id="deep-learning-explanation" class="bg-black/50 p-2.5 rounded-lg border border-red-500/20 text-gray-300 italic leading-relaxed">
+                    Penjelasan: Kecepatan rana yang tinggi membatasi durasi cahaya yang mengenai sensor hanya selama seperseribu detik, sehingga pergerakan cepat objek "terbekukan" di frame tanpa menghasilkan Jejak Blur (Motion Blur).
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button onclick="closeResultModal()" class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold transition">
+                    Coba Lagi / Atur Ulang
+                </button>
+                <button id="btn-next-mission" onclick="nextMission()" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-lg transition flex items-center gap-2">
+                    <span>Misi Selanjutnya</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Camera Parameter Arrays
+        const APERTURES = [1.4, 2.0, 2.8, 4.0, 5.6, 8.0, 11.0, 22.0];
+        const SHUTTERS = [1, 1/2, 1/15, 1/60, 1/125, 1/250, 1/500, 1/1000, 1/4000];
+        const SHUTTER_STRINGS = ["1s", "1/2s", "1/15s", "1/60s", "1/125s", "1/250s", "1/500s", "1/1000s", "1/4000s"];
+        const ISOS = [100, 200, 400, 800, 1600, 3200, 6400];
+
+        // App & Game State
+        let currentMode = 'mission'; // 'mission', 'sandbox', 'theory'
+        let currentMissionIndex = 0;
+        let currentSandboxScene = 'runner';
+        let totalScore = 0;
+        let audioEnabled = true;
+
+        // Current Camera Control Indexes
+        let apIdx = 3;   // f/4.0 default
+        let shIdx = 5;   // 1/250s default
+        let isoIdx = 0;  // ISO 100 default
+
+        // Viewfinder Flags
+        let showGrid = false;
+        let showHistogram = false;
+
+        // Audio Context (Web Audio API for realistic DSLR Sound)
+        let audioCtx = null;
+
+        const MISSIONS = [
+            {
+                id: 1,
+                title: "1. Freeze Motion (Olahraga Siang Hari)",
+                desc: "Klien menginginkan foto pelari yang **beku tajam tanpa blur** pada siang hari cerah. Gunakan Shutter Speed sangat cepat!",
+                scene: "runner",
+                targetEV: 0.0,
+                sceneEV: 14.0, // High ambient light
+                reqs: {
+                    minShutterIdx: 6, // 1/500s or faster
+                    maxNoiseIdx: 2,   // Max ISO 400
+                },
+                question: "Mengapa Shutter Speed tinggi membuat gambar tajam pada gerakan cepat?",
+                explanation: "Rana (Shutter) membuka dalam fraksi waktu sangat singkat (misal 1/1000s), menahan sensor dari merekam pergerakan posisi atlet, sehingga membekukan aksi di udara."
+            },
+            {
+                id: 2,
+                title: "2. Portret Estetik Bokeh (Depth of Field)",
+                desc: "Buat foto portret model dengan latar belakang **sangat blur/bokeh halus** agar model tampil menonjol.",
+                scene: "portrait",
+                targetEV: 0.0,
+                sceneEV: 11.0,
+                reqs: {
+                    maxApertureIdx: 2, // f/2.8 or wider (f/1.4, f/2.0, f/2.8)
+                    maxNoiseIdx: 2
+                },
+                question: "Mengapa bukaan diafragma besar (f-stop kecil seperti f/1.4) menghasilkan latar belakang bokeh?",
+                explanation: "Bukaan diafragma besar menyempitkan kedalaman ruang tajam (Depth of Field), membuat area di luar jarak fokus utama berbaur halus (bokeh)."
+            },
+            {
+                id: 3,
+                title: "3. Air Terjun Lembut (Motion Blur Art)",
+                desc: "Buat efek air terjun seperti **sutra yang mengalir lembut** dengan menggunakan Shutter Speed lambat.",
+                scene: "waterfall",
+                targetEV: 0.0,
+                sceneEV: 11.5,
+                reqs: {
+                    maxShutterIdx: 2, // 1/15s or slower (1s, 1/2s, 1/15s)
+                    maxNoiseIdx: 2
+                },
+                question: "Apa efek utama menggunakan Shutter Speed lambat pada objek air mengalir?",
+                explanation: "Rana membuka lebih lama sehingga sensor merekam pergerakan akumulasi tetesan air dari waktu ke waktu, menciptakan garis tebal bermotif sutra (Motion Blur)."
+            },
+            {
+                id: 4,
+                title: "4. Fotografi Malam Hari (Night City)",
+                desc: "Ambil foto suasana kota di malam hari yang redup. Seimbangkan ISO dan Shutter Speed agar tidak terlalu gelap dan tidak terlalu berbintik noise!",
+                scene: "night",
+                targetEV: 0.0,
+                sceneEV: 6.0, // Dark ambient light
+                reqs: {
+                    maxNoiseIdx: 4, // Max ISO 1600 for clean night shot
+                },
+                question: "Apa dampak negatif menaikkan ISO hingga nilai maksimal (ISO 6400) pada suasana malam?",
+                explanation: "Peningkatan ISO memperkuat sinyal digital sensor secara paksa, yang menyebabkan munculnya bintik-bintik acak warna merah/hijau/biru yang disebut Noise/Grain."
+            },
+            {
+                id: 5,
+                title: "5. Ujian Akhir Sertifikasi Fotografer DKV",
+                desc: "Tantangan Komprehensif: Ambil foto model di sore hari redup dengan latar belakang bokeh tajam dan tingkat keterangan yang sangat presisi!",
+                scene: "portrait",
+                targetEV: 0.0,
+                sceneEV: 10.0,
+                reqs: {
+                    maxApertureIdx: 2, // f/2.8 or lower
+                    maxNoiseIdx: 2,   // low noise
+                },
+                question: "Bagaimana cara menjaga foto tetap terang di tempat redup tanpa membuat latar belakang blur hilang?",
+                explanation: "Gunakan kombinasi aperture paling lebar (f/1.4) untuk memasukkan cahaya terbanyak sekaligus mempertahankan bokeh, lalu seimbangkan dengan ISO moderat dan Shutter Speed yang stabil."
+            }
+        ];
+
+        const canvas = document.getElementById('camera-canvas');
+        const ctx = canvas.getContext('2d');
+        const resultCanvas = document.getElementById('captured-result-canvas');
+        const resultCtx = resultCanvas.getContext('2d');
+        const histoCanvas = document.getElementById('histogram-canvas');
+        const histoCtx = histoCanvas.getContext('2d');
+
+        window.onload = function() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Add click focus listener on viewfinder
+            canvas.addEventListener('click', function(e) {
+                triggerFocusEffect(e);
+            });
+
+            updateCameraSettings();
+            loadMission(0);
+            
+            // Start render loop
+            requestAnimationFrame(renderLoop);
+        };
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            resultCanvas.width = 400;
+            resultCanvas.height = 300;
+            histoCanvas.width = 140;
+            histoCanvas.height = 60;
+        }
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (audioEnabled) {
+                icon.className = "fa-solid fa-volume-high";
+            } else {
+                icon.className = "fa-solid fa-volume-xmark text-red-400";
+            }
+        }
+
+        const shutterAudio = new Audio('photo.mp3');
+
+        function playShutterSound() {
+            if (!audioEnabled) return;
+            shutterAudio.currentTime = 0;
+            shutterAudio.play();
+        }
+
+        function playBeepSound() {
+            if (!audioEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1050, now);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        }
+
+        function calculateEV() {
+            const N = APERTURES[apIdx];
+            const t = SHUTTERS[shIdx];
+            const S = ISOS[isoIdx];
+
+            // Standard EV calculation = log2(N^2 / t) - log2(S / 100)
+            const cameraEV = Math.log2((N * N) / t) - Math.log2(S / 100);
+
+            let sceneEV = 12.0;
+            if (currentMode === 'mission') {
+                sceneEV = MISSIONS[currentMissionIndex].sceneEV;
+            } else {
+                // Sandbox scenes
+                if (currentSandboxScene === 'runner') sceneEV = 14.0;
+                if (currentSandboxScene === 'portrait') sceneEV = 11.0;
+                if (currentSandboxScene === 'waterfall') sceneEV = 11.5;
+                if (currentSandboxScene === 'night') sceneEV = 6.0;
+            }
+
+            // Delta EV relative to ideal exposure
+            const evDelta = sceneEV - cameraEV;
+            return evDelta;
+        }
+
+        function updateCameraSettings() {
+            apIdx = parseInt(document.getElementById('slider-aperture').value);
+            shIdx = parseInt(document.getElementById('slider-shutter').value);
+            isoIdx = parseInt(document.getElementById('slider-iso').value);
+
+            // Update Labels
+            document.getElementById('label-aperture').innerText = `f/${APERTURES[apIdx]}`;
+            document.getElementById('hud-aperture').innerText = `f/${APERTURES[apIdx]}`;
+
+            document.getElementById('label-shutter').innerText = SHUTTER_STRINGS[shIdx];
+            document.getElementById('hud-shutter').innerText = SHUTTER_STRINGS[shIdx];
+
+            document.getElementById('label-iso').innerText = `ISO ${ISOS[isoIdx]}`;
+            document.getElementById('hud-iso').innerText = `${ISOS[isoIdx]}`;
+
+            // Calculate EV & Update EV Indicator Bar
+            const evDelta = calculateEV();
+            const evText = document.getElementById('ev-value-text');
+            const evBar = document.getElementById('ev-indicator');
+            const expBadge = document.getElementById('exposure-badge');
+
+            const evVal = evDelta.toFixed(1);
+            evText.innerText = (evVal > 0 ? `+${evVal}` : evVal);
+
+            // Map EV (-3 to +3) to bar position (0% to 100%)
+            let clampEV = Math.max(-3, Math.min(3, evDelta));
+            let percent = ((clampEV + 3) / 6) * 100;
+            evBar.style.left = `${percent}%`;
+
+            if (Math.abs(evDelta) <= 0.5) {
+                evBar.className = "h-full bg-green-400 transition-all duration-150 absolute";
+                expBadge.style.opacity = '0';
+            } else if (evDelta > 0.5) {
+                // Dark (Underexposed)
+                evBar.className = "h-full bg-yellow-400 transition-all duration-150 absolute";
+                expBadge.style.opacity = '1';
+                expBadge.innerHTML = `<i class="fa-solid fa-moon mr-1"></i> UNDEREXPOSED (GELAP)`;
+                expBadge.className = "absolute top-16 left-1/2 transform -translate-x-1/2 bg-yellow-600/90 text-white font-mono text-xs px-3 py-1 rounded-full border border-yellow-400 transition-opacity pointer-events-none z-20";
+            } else {
+                // Bright (Overexposed)
+                evBar.className = "h-full bg-red-500 transition-all duration-150 absolute";
+                expBadge.style.opacity = '1';
+                expBadge.innerHTML = `<i class="fa-solid fa-sun mr-1"></i> OVEREXPOSED (TERALU TERANG)`;
+                expBadge.className = "absolute top-16 left-1/2 transform -translate-x-1/2 bg-red-600/90 text-white font-mono text-xs px-3 py-1 rounded-full border border-red-400 transition-opacity pointer-events-none z-20";
+            }
+
+            // Check mission requirements update
+            if (currentMode === 'mission') {
+                checkMissionRequirements();
+            }
+        }
+
+        let animFrame = 0;
+
+        function renderLoop() {
+            animFrame++;
+            drawSceneOnCanvas(ctx, canvas.width, canvas.height, false);
+            if (showHistogram) {
+                drawHistogram();
+            }
+            requestAnimationFrame(renderLoop);
+        }
+
+        function drawSceneOnCanvas(targetCtx, w, h, isSnapshot) {
+            targetCtx.clearRect(0, 0, w, h);
+
+            const evDelta = calculateEV();
+            // Brightness multiplier: EV delta = 0 -> 1.0; +1 EV dark -> 0.5; -1 EV bright -> 1.8
+            let brightness = Math.pow(2, -evDelta);
+            brightness = Math.max(0.05, Math.min(3.0, brightness));
+
+            const activeScene = (currentMode === 'mission') ? MISSIONS[currentMissionIndex].scene : currentSandboxScene;
+
+            targetCtx.save();
+
+            // 1. Render Scene Background
+            drawSceneBackground(targetCtx, w, h, activeScene, apIdx);
+
+            // 2. Render Scene Main Subject
+            drawSceneSubject(targetCtx, w, h, activeScene, shIdx, animFrame);
+
+            // 3. Apply Exposure/Brightness Overlay Effect
+            if (brightness !== 1.0) {
+                targetCtx.save();
+                if (brightness < 1.0) {
+                    // Darken
+                    targetCtx.fillStyle = `rgba(0, 0, 0, ${1 - brightness})`;
+                    targetCtx.fillRect(0, 0, w, h);
+                } else {
+                    // Overexpose / Blown Out White
+                    targetCtx.fillStyle = `rgba(255, 255, 255, ${Math.min(0.95, (brightness - 1) * 0.5)})`;
+                    targetCtx.fillRect(0, 0, w, h);
+                }
+                targetCtx.restore();
+            }
+
+            // 4. Apply ISO Noise/Grain Overlay Effect
+            const noiseIntensity = isoIdx; // 0 to 6
+            if (noiseIntensity > 0) {
+                drawNoiseOverlay(targetCtx, w, h, noiseIntensity);
+            }
+
+            targetCtx.restore();
+        }
+
+        function drawSceneBackground(targetCtx, w, h, scene, apertureIndex) {
+            // DoF Blur radius calculated from aperture index (f/1.4 = max blur, f/22 = sharp)
+            const blurRadius = (7 - apertureIndex) * 2.2; 
+
+            targetCtx.save();
+            if (blurRadius > 0.5) {
+                targetCtx.filter = `blur(${blurRadius}px)`;
+            }
+
+            if (scene === 'runner') {
+                // Outdoor Athletics Stadium
+                // Sky
+                let skyGrad = targetCtx.createLinearGradient(0, 0, 0, h * 0.5);
+                skyGrad.addColorStop(0, '#38bdf8');
+                skyGrad.addColorStop(1, '#bae6fd');
+                targetCtx.fillStyle = skyGrad;
+                targetCtx.fillRect(0, 0, w, h * 0.5);
+
+                // Stadium Grandstand
+                targetCtx.fillStyle = '#475569';
+                targetCtx.fillRect(0, h * 0.35, w, h * 0.15);
+
+                // Track Field
+                let trackGrad = targetCtx.createLinearGradient(0, h * 0.5, 0, h);
+                trackGrad.addColorStop(0, '#b91c1c');
+                trackGrad.addColorStop(1, '#991b1b');
+                targetCtx.fillStyle = trackGrad;
+                targetCtx.fillRect(0, h * 0.5, w, h * 0.5);
+
+                // White Track Lines
+                targetCtx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                targetCtx.lineWidth = 3;
+                targetCtx.beginPath();
+                targetCtx.moveTo(0, h * 0.65); targetCtx.lineTo(w, h * 0.65);
+                targetCtx.moveTo(0, h * 0.82); targetCtx.lineTo(w, h * 0.82);
+                targetCtx.stroke();
+
+            } else if (scene === 'portrait') {
+                // Lush Green Park Garden
+                let bgGrad = targetCtx.createLinearGradient(0, 0, 0, h);
+                bgGrad.addColorStop(0, '#15803d');
+                bgGrad.addColorStop(0.5, '#166534');
+                bgGrad.addColorStop(1, '#14532d');
+                targetCtx.fillStyle = bgGrad;
+                targetCtx.fillRect(0, 0, w, h);
+
+                // Bokeh Sunlight Spots
+                targetCtx.fillStyle = 'rgba(254, 240, 138, 0.35)';
+                const numBokeh = 18;
+                for (let i = 0; i < numBokeh; i++) {
+                    let bx = (i * 97) % w;
+                    let by = (i * 53) % (h * 0.7);
+                    let br = 15 + (i % 5) * 12;
+                    targetCtx.beginPath();
+                    targetCtx.arc(bx, by, br, 0, Math.PI * 2);
+                    targetCtx.fill();
+                }
+
+            } else if (scene === 'waterfall') {
+                // Forest Rocks & Waterfall background
+                targetCtx.fillStyle = '#1e293b';
+                targetCtx.fillRect(0, 0, w, h);
+
+                // Rocks
+                targetCtx.fillStyle = '#334155';
+                targetCtx.beginPath();
+                targetCtx.ellipse(w * 0.2, h * 0.6, 120, 180, 0, 0, Math.PI * 2);
+                targetCtx.ellipse(w * 0.8, h * 0.6, 140, 200, 0, 0, Math.PI * 2);
+                targetCtx.fill();
+
+            } else if (scene === 'night') {
+                // Dark Cityscape at night
+                let nightGrad = targetCtx.createLinearGradient(0, 0, 0, h);
+                nightGrad.addColorStop(0, '#020617');
+                nightGrad.addColorStop(1, '#0f172a');
+                targetCtx.fillStyle = nightGrad;
+                targetCtx.fillRect(0, 0, w, h);
+
+                // Distant City Buildings with Lights
+                for (let i = 0; i < 8; i++) {
+                    let bw = w * 0.12;
+                    let bh = h * (0.3 + (i % 3) * 0.15);
+                    let bx = i * (bw + 10);
+                    targetCtx.fillStyle = '#1e293b';
+                    targetCtx.fillRect(bx, h - bh, bw, bh);
+
+                    // Yellow Window dots
+                    targetCtx.fillStyle = '#fef08a';
+                    for (let wy = h - bh + 10; wy < h - 20; wy += 20) {
+                        for (let wx = bx + 8; wx < bx + bw - 8; wx += 15) {
+                            if ((wx + wy) % 3 === 0) {
+                                targetCtx.fillRect(wx, wy, 5, 8);
+                            }
+                        }
+                    }
+                }
+            }
+
+            targetCtx.restore();
+        }
+
+        function drawSceneSubject(targetCtx, w, h, scene, shutterIndex, frame) {
+            targetCtx.save();
+
+            // Motion Blur offset based on shutter speed (shIdx 0 = 1s = heavy blur; shIdx 8 = 1/4000s = zero blur)
+            const motionBlurFactor = Math.max(0, (6 - shutterIndex)); 
+
+            if (scene === 'runner') {
+                // Running Athlete
+                const cx = w * 0.5;
+                const cy = h * 0.65;
+
+                if (motionBlurFactor > 0) {
+                    // Draw Motion Streak/Ghosting Lines
+                    targetCtx.save();
+                    targetCtx.globalAlpha = 0.25;
+                    for (let i = 1; i <= motionBlurFactor * 4; i++) {
+                        let offsetX = -i * 3;
+                        drawAthleteAvatar(targetCtx, cx + offsetX, cy);
+                    }
+                    targetCtx.restore();
+                }
+
+                // Sharp Main Athlete
+                drawAthleteAvatar(targetCtx, cx, cy);
+
+            } else if (scene === 'portrait') {
+                // Portrait Model Character (In Focus Subject)
+                const cx = w * 0.5;
+                const cy = h * 0.55;
+                drawPortraitModel(targetCtx, cx, cy, h);
+
+            } else if (scene === 'waterfall') {
+                // Waterfall Stream Flow
+                const fx = w * 0.5;
+                const fy = 0;
+                const fw = w * 0.35;
+                const fh = h;
+
+                targetCtx.save();
+                if (motionBlurFactor > 2) {
+                    // Silky Smooth Waterfall Water (Slow Shutter)
+                    let waterGrad = targetCtx.createLinearGradient(fx, 0, fx, fh);
+                    waterGrad.addColorStop(0, 'rgba(224, 242, 254, 0.9)');
+                    waterGrad.addColorStop(0.5, 'rgba(186, 230, 253, 0.85)');
+                    waterGrad.addColorStop(1, 'rgba(224, 242, 254, 0.95)');
+                    targetCtx.fillStyle = waterGrad;
+                    targetCtx.fillRect(fx - fw/2, fy, fw, fh);
+                } else {
+                    // Frozen Droplets & Water Texture (Fast Shutter)
+                    targetCtx.fillStyle = 'rgba(186, 230, 253, 0.7)';
+                    targetCtx.fillRect(fx - fw/2, fy, fw, fh);
+
+                    targetCtx.fillStyle = '#ffffff';
+                    for (let i = 0; i < 150; i++) {
+                        let dx = (fx - fw/2) + ((i * 37) % fw);
+                        let dy = (i * 23) % fh;
+                        targetCtx.beginPath();
+                        targetCtx.arc(dx, dy, 2.5, 0, Math.PI * 2);
+                        targetCtx.fill();
+                    }
+                }
+                targetCtx.restore();
+
+            } else if (scene === 'night') {
+                // Fast Moving Car Light Trails
+                const cy = h * 0.75;
+
+                if (motionBlurFactor > 2) {
+                    // Beautiful Light Trails (Slow Shutter)
+                    targetCtx.strokeStyle = '#ef4444'; // Red taillight trail
+                    targetCtx.lineWidth = 8;
+                    targetCtx.beginPath();
+                    targetCtx.moveTo(0, cy);
+                    targetCtx.lineTo(w, cy);
+                    targetCtx.stroke();
+
+                    targetCtx.strokeStyle = '#fef08a'; // Yellow headlight trail
+                    targetCtx.lineWidth = 10;
+                    targetCtx.beginPath();
+                    targetCtx.moveTo(0, cy + 25);
+                    targetCtx.lineTo(w, cy + 25);
+                    targetCtx.stroke();
+                } else {
+                    // Frozen Car Body (Fast Shutter)
+                    targetCtx.fillStyle = '#dc2626';
+                    targetCtx.fillRect(w * 0.4, cy - 20, 100, 35);
+                    targetCtx.fillStyle = '#fef08a';
+                    targetCtx.fillRect(w * 0.4 + 95, cy - 10, 8, 12);
+                }
+            }
+
+            targetCtx.restore();
+        }
+
+        /* Helper Drawing Functions */
+        function drawAthleteAvatar(ctx, x, y) {
+            ctx.save();
+            ctx.fillStyle = '#2563eb'; // Blue jersey
+            ctx.beginPath();
+            ctx.arc(x, y - 50, 16, 0, Math.PI * 2); // Head
+            ctx.fill();
+
+            // Body Torso
+            ctx.fillStyle = '#1d4ed8';
+            ctx.fillRect(x - 12, y - 32, 24, 40);
+
+            // Legs
+            ctx.strokeStyle = '#f87171';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(x - 6, y + 8); ctx.lineTo(x - 22, y + 45); // Left leg stride
+            ctx.moveTo(x + 6, y + 8); ctx.lineTo(x + 22, y + 38); // Right leg
+            ctx.stroke();
+
+            // Arms
+            ctx.strokeStyle = '#f87171';
+            ctx.beginPath();
+            ctx.moveTo(x - 10, y - 25); ctx.lineTo(x + 18, y - 10);
+            ctx.moveTo(x + 10, y - 25); ctx.lineTo(x - 18, y - 10);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawPortraitModel(ctx, x, y, h) {
+            ctx.save();
+            // Hair
+            ctx.fillStyle = '#451a03';
+            ctx.beginPath();
+            ctx.arc(x, y - 40, 45, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Face
+            ctx.fillStyle = '#fde047';
+            ctx.beginPath();
+            ctx.arc(x, y - 35, 32, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Eyes & Smile
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.arc(x - 12, y - 40, 4, 0, Math.PI * 2);
+            ctx.arc(x + 12, y - 40, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(x, y - 30, 12, 0.1, Math.PI - 0.1);
+            ctx.stroke();
+
+            // Dress / Clothes
+            ctx.fillStyle = '#ec4899';
+            ctx.beginPath();
+            ctx.moveTo(x - 30, y + 50);
+            ctx.lineTo(x + 30, y + 50);
+            ctx.lineTo(x + 45, y + 160);
+            ctx.lineTo(x - 45, y + 160);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawNoiseOverlay(ctx, w, h, intensity) {
+            // Noise grain generation
+            const imgData = ctx.getImageData(0, 0, w, h);
+            const data = imgData.data;
+            const factor = intensity * 12; // grain strength
+
+            for (let i = 0; i < data.length; i += 16) { // step 4 pixels for performance
+                const noise = (Math.random() - 0.5) * factor;
+                data[i] = Math.min(255, Math.max(0, data[i] + noise));
+                data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise));
+                data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise));
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        function drawHistogram() {
+            histoCtx.clearRect(0, 0, histoCanvas.width, histoCanvas.height);
+            const evDelta = calculateEV();
+
+            histoCtx.fillStyle = 'rgba(0, 255, 136, 0.5)';
+            histoCtx.beginPath();
+            histoCtx.moveTo(0, histoCanvas.height);
+
+            // Shift curve based on exposure delta
+            const shift = evDelta * 20; 
+            const mid = (histoCanvas.width / 2) + shift;
+
+            for (let x = 0; x <= histoCanvas.width; x += 5) {
+                let dist = Math.abs(x - mid);
+                let height = Math.max(2, histoCanvas.height - Math.pow(dist / 3, 1.8));
+                histoCtx.lineTo(x, histoCanvas.height - height);
+            }
+
+            histoCtx.lineTo(histoCanvas.width, histoCanvas.height);
+            histoCtx.closePath();
+            histoCtx.fill();
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            // Buttons UI State
+            document.getElementById('tab-mission').className = mode === 'mission' ? 'px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium transition flex items-center gap-2 bg-red-500 text-white shadow' : 'px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium text-gray-400 hover:text-white transition flex items-center gap-2';
+            document.getElementById('tab-sandbox').className = mode === 'sandbox' ? 'px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium transition flex items-center gap-2 bg-red-500 text-white shadow' : 'px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium text-gray-400 hover:text-white transition flex items-center gap-2';
+            document.getElementById('tab-theory').className = mode === 'theory' ? 'px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium transition flex items-center gap-2 bg-red-500 text-white shadow' : 'px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium text-gray-400 hover:text-white transition flex items-center gap-2';
+
+            // Panels Visibility
+            document.getElementById('panel-mission').style.display = mode === 'mission' ? 'block' : 'none';
+            document.getElementById('panel-sandbox').style.display = mode === 'sandbox' ? 'block' : 'none';
+            document.getElementById('panel-theory').style.display = mode === 'theory' ? 'block' : 'none';
+
+            if (mode === 'mission') {
+                loadMission(currentMissionIndex);
+            } else if (mode === 'sandbox') {
+                document.getElementById('hud-mode-name').innerText = "Mode Bebas";
+                document.getElementById('hud-scene-name').innerText = "Sandbox Studio";
+            } else if (mode === 'theory') {
+                document.getElementById('hud-mode-name').innerText = "Mode Teori";
+                document.getElementById('hud-scene-name').innerText = "Modul DKV XI";
+            }
+
+            updateCameraSettings();
+        }
+
+        function loadMission(index) {
+            currentMissionIndex = index;
+            const m = MISSIONS[index];
+            document.getElementById('mission-level-badge').innerText = `Level ${m.id}/${MISSIONS.length}`;
+            document.getElementById('mission-title').innerText = m.title;
+            document.getElementById('mission-desc').innerHTML = m.desc;
+            document.getElementById('hud-mode-name').innerText = `Misi ${m.id}`;
+            document.getElementById('hud-scene-name').innerText = m.title.split(' ')[1] || "Subjek";
+
+            checkMissionRequirements();
+        }
+
+        function checkMissionRequirements() {
+            if (currentMode !== 'mission') return;
+            const m = MISSIONS[currentMissionIndex];
+            const evDelta = calculateEV();
+
+            // 1. Exposure req
+            const expOk = Math.abs(evDelta) <= 0.5;
+            updateReqUI('req-exposure', expOk, "Eksposur Seimbang (-0.5s/d +0.5 EV)");
+
+            // 2. Motion / Sharpness req
+            let sharpOk = true;
+            if (m.reqs.minShutterIdx !== undefined) sharpOk = shIdx >= m.reqs.minShutterIdx;
+            if (m.reqs.maxShutterIdx !== undefined) sharpOk = shIdx <= m.reqs.maxShutterIdx;
+            if (m.reqs.maxApertureIdx !== undefined) sharpOk = apIdx <= m.reqs.maxApertureIdx;
+            updateReqUI('req-sharpness', sharpOk, "Parameter Efek Subjek (Bokeh/Motion)");
+
+            // 3. Noise req
+            let noiseOk = true;
+            if (m.reqs.maxNoiseIdx !== undefined) noiseOk = isoIdx <= m.reqs.maxNoiseIdx;
+            updateReqUI('req-noise', noiseOk, "Kebisingan / Noise Terkontrol");
+        }
+
+        function updateReqUI(elementId, isPassed, text) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            if (isPassed) {
+                el.className = "flex items-center justify-between text-green-400 font-medium";
+                el.innerHTML = `<span><i class="fa-solid fa-circle-check mr-1.5 text-green-400"></i> ${text}</span> <i class="fa-solid fa-check text-green-400"></i>`;
+            } else {
+                el.className = "flex items-center justify-between text-gray-400";
+                el.innerHTML = `<span><i class="fa-regular fa-circle mr-1.5"></i> ${text}</span> <i class="fa-solid fa-xmark text-red-500"></i>`;
+            }
+        }
+
+        function changeSandboxScene(scene) {
+            currentSandboxScene = scene;
+            document.querySelectorAll('.sandbox-scene-btn').forEach(btn => btn.classList.remove('border-red-500', 'bg-red-950/20'));
+            event.currentTarget.classList.add('border-red-500', 'bg-red-950/20');
+            updateCameraSettings();
+        }
+
+        function toggleGrid() {
+            showGrid = !showGrid;
+            document.getElementById('grid-overlay').style.opacity = showGrid ? '1' : '0';
+            document.getElementById('btn-grid').classList.toggle('text-camera-hud', showGrid);
+        }
+
+        function toggleHistogram() {
+            showHistogram = !showHistogram;
+            document.getElementById('histogram-box').style.opacity = showHistogram ? '1' : '0';
+            document.getElementById('btn-histogram').classList.toggle('text-camera-hud', showHistogram);
+        }
+
+        function triggerFocusEffect(e) {
+            playBeepSound();
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const focusBox = document.getElementById('focus-box');
+            focusBox.style.left = `${x}px`;
+            focusBox.style.top = `${y}px`;
+            focusBox.style.opacity = '1';
+            focusBox.style.transform = 'translate(-50%, -50%) scale(1.2)';
+
+            setTimeout(() => {
+                focusBox.style.transform = 'translate(-50%, -50%) scale(1.0)';
+            }, 150);
+
+            setTimeout(() => {
+                focusBox.style.opacity = '0';
+            }, 1000);
+        }
+
+        function takePicture() {
+            playShutterSound();
+
+            // Render snapshot to modal canvas
+            drawSceneOnCanvas(resultCtx, resultCanvas.width, resultCanvas.height, true);
+
+            // Calculate score & feedback
+            const evDelta = calculateEV();
+            const absEV = Math.abs(evDelta);
+
+            let score = 100 - (absEV * 20); // deduct for exposure error
+            score = Math.max(20, Math.min(100, Math.round(score)));
+
+            let stars = 3;
+            if (score < 60) stars = 1;
+            else if (score < 85) stars = 2;
+
+            // Update Result Modal UI
+            document.getElementById('result-score-percent').innerText = `${score}%`;
+            
+            // Exposure Evaluation
+            const expText = document.getElementById('eval-exposure-text');
+            const expBar = document.getElementById('eval-exposure-bar');
+            if (absEV <= 0.5) {
+                expText.innerText = "Sangat Presisi (Sempurna)";
+                expText.className = "text-green-400 font-mono font-bold";
+                expBar.className = "bg-green-400 h-full w-full";
+            } else if (evDelta > 0.5) {
+                expText.innerText = "Terlalu Gelap (Underexposed)";
+                expText.className = "text-yellow-400 font-mono font-bold";
+                expBar.className = "bg-yellow-400 h-full w-2/3";
+            } else {
+                expText.innerText = "Terlalu Terang (Overexposed)";
+                expText.className = "text-red-400 font-mono font-bold";
+                expBar.className = "bg-red-500 h-full w-2/3";
+            }
+
+            // Motion Evaluation
+            const motionText = document.getElementById('eval-motion-text');
+            if (shIdx >= 5) {
+                motionText.innerText = "Fokus Tajam Membeku";
+                motionText.className = "text-green-400 font-mono font-bold";
+            } else {
+                motionText.innerText = "Terdapat Motion Blur";
+                motionText.className = "text-cyan-400 font-mono font-bold";
+            }
+
+            // Noise Evaluation
+            const noiseText = document.getElementById('eval-noise-text');
+            if (isoIdx <= 2) {
+                noiseText.innerText = "Bersih Tanpa Grain (ISO Rendah)";
+                noiseText.className = "text-green-400 font-mono font-bold";
+            } else {
+                noiseText.innerText = "Bintik Noise Terlihat (ISO Tinggi)";
+                noiseText.className = "text-yellow-400 font-mono font-bold";
+            }
+
+            // Stars UI
+            let starsHTML = '';
+            for (let i = 0; i < 3; i++) {
+                if (i < stars) starsHTML += '<i class="fa-solid fa-star text-amber-400"></i>';
+                else starsHTML += '<i class="fa-regular fa-star text-gray-500"></i>';
+            }
+            document.getElementById('result-star-rating').innerHTML = starsHTML;
+
+            // Deep Learning Question Setup
+            const currentM = MISSIONS[currentMissionIndex];
+            if (currentMode === 'mission') {
+                document.getElementById('deep-learning-question').innerText = currentM.question;
+                document.getElementById('deep-learning-explanation').innerText = `Penjelasan Fotografi: ${currentM.explanation}`;
+                
+                if (score >= 70) {
+                    totalScore += score;
+                    document.getElementById('total-score').innerText = totalScore;
+                }
+            } else {
+                document.getElementById('deep-learning-question').innerText = "Refleksi Mode Bebas: Bagaimana kombinasi ISO, Shutter, dan Aperture mempengaruhi hasil foto Anda?";
+                document.getElementById('deep-learning-explanation').innerText = "Penjelasan: Setiap perubahan pada salah satu elemen Segitiga Eksposur harus diimbangi oleh elemen lainnya untuk mempertahankan tingkat kecerahan foto yang seimbang.";
+            }
+
+            // Show Modal
+            const modal = document.getElementById('modal-result');
+            modal.style.opacity = '1';
+            modal.style.pointerEvents = 'auto';
+        }
+
+        function closeResultModal() {
+            const modal = document.getElementById('modal-result');
+            modal.style.opacity = '0';
+            modal.style.pointerEvents = 'none';
+        }
+
+        function nextMission() {
+            closeResultModal();
+            if (currentMissionIndex < MISSIONS.length - 1) {
+                loadMission(currentMissionIndex + 1);
+            } else {
+                alert("Selamat! Anda telah menyelesaikan seluruh Misi Sertifikasi Fotografi DKV XI!");
+            }
+        }
+    </script>
+</body>
+</html>
