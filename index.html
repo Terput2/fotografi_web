@@ -66,55 +66,55 @@
         }
     </style>
 </head>
-<body class="font-sans antialiased h-screen overflow-hidden flex flex-col">
+<body class="font-sans antialiased min-h-screen md:h-screen overflow-y-auto md:overflow-hidden flex flex-col">
 
     <!-- Header -->
-    <header class="bg-camera-card border-b border-gray-800 px-4 py-2.5 flex items-center justify-between z-20 shrink-0">
-        <div class="flex items-center space-x-3">
-            <div class="bg-gradient-to-tr from-red-600 to-red-400 p-2 rounded-lg shadow-lg">
-                <i class="fa-solid font-bold fa-camera-retro text-xl text-white"></i>
+    <header class="bg-camera-card border-b border-gray-800 px-2.5 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-1.5 z-20 shrink-0">
+        <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
+            <div class="bg-gradient-to-tr from-red-600 to-red-400 p-1.5 sm:p-2 rounded-lg shadow-lg shrink-0">
+                <i class="fa-solid font-bold fa-camera-retro text-base sm:text-xl text-white"></i>
             </div>
-            <div>
-                <h1 class="font-extrabold text-base md:text-lg tracking-wide text-white flex items-center gap-2">
-                    CAM-PRO <span class="bg-red-500/20 text-red-400 text-xs px-2 py-0.5 rounded border border-red-500/30 font-mono">DKV XI</span>
+            <div class="min-w-0">
+                <h1 class="font-extrabold text-sm sm:text-base md:text-lg tracking-wide text-white flex items-center gap-2 truncate">
+                    CAM-PRO <span class="hidden sm:inline-block bg-red-500/20 text-red-400 text-xs px-2 py-0.5 rounded border border-red-500/30 font-mono">DKV XI</span>
                 </h1>
-                <p class="text-xs text-gray-400 hidden sm:block">Laboratorium Simulasi Fotografi & Deep Learning Segitiga Eksposur</p>
+                <p class="text-xs text-gray-400 hidden md:block">Laboratorium Simulasi Fotografi & Deep Learning Segitiga Eksposur</p>
             </div>
         </div>
 
         <!-- Navigation Tabs -->
-        <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-900/80 p-1 rounded-xl border border-gray-800">
-            <button id="tab-mission" onclick="switchMode('mission')" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium transition flex items-center gap-2 bg-red-500 text-white shadow">
+        <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-900/80 p-1 rounded-xl border border-gray-800 shrink-0">
+            <button id="tab-mission" onclick="switchMode('mission')" class="px-2 sm:px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium transition flex items-center gap-1.5 sm:gap-2 bg-red-500 text-white shadow">
                 <i class="fa-solid fa-trophy"></i>
-                <span>Mode Misi</span>
+                <span class="hidden sm:inline">Mode Misi</span>
             </button>
-            <button id="tab-sandbox" onclick="switchMode('sandbox')" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium text-gray-400 hover:text-white transition flex items-center gap-2">
+            <button id="tab-sandbox" onclick="switchMode('sandbox')" class="px-2 sm:px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium text-gray-400 hover:text-white transition flex items-center gap-1.5 sm:gap-2">
                 <i class="fa-solid fa-sliders"></i>
-                <span>Mode Bebas</span>
+                <span class="hidden sm:inline">Mode Bebas</span>
             </button>
-            <button id="tab-theory" onclick="switchMode('theory')" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium text-gray-400 hover:text-white transition flex items-center gap-2">
+            <button id="tab-theory" onclick="switchMode('theory')" class="px-2 sm:px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium text-gray-400 hover:text-white transition flex items-center gap-1.5 sm:gap-2">
                 <i class="fa-solid fa-book-open"></i>
-                <span>Modul & Teori</span>
+                <span class="hidden sm:inline">Modul & Teori</span>
             </button>
         </div>
 
         <!-- Sound & Progress Stats -->
-        <div class="flex items-center space-x-3">
+        <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
             <div class="hidden md:flex items-center gap-2 bg-gray-900 px-3 py-1.5 rounded-lg border border-gray-800 font-mono text-xs text-yellow-400">
                 <i class="fa-solid fa-star text-amber-400"></i>
                 <span>Skor: <strong id="total-score">0</strong> XP</span>
             </div>
-            <button id="btn-sound" onclick="toggleAudio()" class="w-9 h-9 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 flex items-center justify-center transition border border-gray-700" title="Suara Shutter">
+            <button id="btn-sound" onclick="toggleAudio()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 flex items-center justify-center transition border border-gray-700 shrink-0" title="Suara Shutter">
                 <i class="fa-solid fa-volume-high" id="sound-icon"></i>
             </button>
         </div>
     </header>
 
     <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+    <div class="flex-1 flex flex-col md:flex-row overflow-visible md:overflow-hidden relative">
 
         <!-- LEFT/TOP: Viewfinder & Scene Canvas Display -->
-        <div class="flex-1 flex flex-col bg-black relative p-2 md:p-4 justify-between overflow-hidden">
+        <div class="flex-1 flex flex-col bg-black relative p-2 md:p-4 justify-between overflow-hidden min-h-[50vh] md:min-h-0 shrink-0 md:shrink">
             
             <!-- Camera Viewfinder Top Bar Overlay -->
             <div class="absolute top-4 left-4 right-4 z-10 flex justify-between items-start pointer-events-none">
