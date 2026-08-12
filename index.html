@@ -207,7 +207,7 @@
                         <span class="text-xs font-semibold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
                             <i class="fa-solid fa-bullseye"></i> Briefing Klien DKV
                         </span>
-                        <span id="mission-level-badge" class="bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded font-mono font-bold">Level 1/5</span>
+                        <span id="mission-level-badge" class="bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded font-mono font-bold">Level 1/20</span>
                     </div>
                     <h3 id="mission-title" class="text-sm font-bold text-white mb-1">Potret Olahragawan Lari</h3>
                     <p id="mission-desc" class="text-xs text-gray-300 leading-relaxed mb-3">
@@ -550,6 +550,213 @@
                 },
                 question: "Bagaimana cara menjaga foto tetap terang di tempat redup tanpa membuat latar belakang blur hilang?",
                 explanation: "Gunakan kombinasi aperture paling lebar (f/1.4) untuk memasukkan cahaya terbanyak sekaligus mempertahankan bokeh, lalu seimbangkan dengan ISO moderat dan Shutter Speed yang stabil."
+            },
+            {
+                id: 6,
+                title: "6. Sprint Estafet Sore Hari",
+                desc: "Klien dari klub atletik ingin foto pelari estafet yang **tajam membeku** saat cahaya sore mulai meredup. Naikkan ISO secukupnya agar rana tetap cepat!",
+                scene: "runner",
+                targetEV: 0.0,
+                sceneEV: 9.0,
+                reqs: {
+                    minShutterIdx: 6,
+                    maxNoiseIdx: 3,
+                },
+                question: "Mengapa fotografer perlu menaikkan ISO saat cahaya mulai redup namun tetap ingin Shutter Speed cepat?",
+                explanation: "Menaikkan ISO membuat sensor lebih sensitif terhadap cahaya, sehingga eksposur tetap seimbang meski rana dibuka sangat singkat (cepat) pada kondisi cahaya yang berkurang."
+            },
+            {
+                id: 7,
+                title: "7. Sesi Foto Produk Fashion Taman Kota",
+                desc: "Brand fashion lokal meminta foto model dengan latar taman kota yang **blur lembut** agar produk pakaian tetap menjadi pusat perhatian.",
+                scene: "portrait",
+                targetEV: 0.0,
+                sceneEV: 13.0,
+                reqs: {
+                    maxApertureIdx: 3,
+                    maxNoiseIdx: 2
+                },
+                question: "Kenapa bukaan diafragma lebar tetap dipilih meski kondisi siang hari sangat terang?",
+                explanation: "Bukaan lebar dipertahankan untuk menjaga efek bokeh pada latar belakang; kelebihan cahaya di siang hari dapat diimbangi dengan mempercepat Shutter Speed, bukan menyempitkan diafragma."
+            },
+            {
+                id: 8,
+                title: "8. Air Terjun Tropis Berkabut Pagi",
+                desc: "Tim travel vlog meminta footage air terjun dengan efek **kabut sutra** yang lembut di pagi hari yang teduh.",
+                scene: "waterfall",
+                targetEV: 0.0,
+                sceneEV: 9.5,
+                reqs: {
+                    maxShutterIdx: 3,
+                    maxNoiseIdx: 3
+                },
+                question: "Apa risiko menggunakan Shutter Speed terlalu lambat tanpa alat bantu seperti tripod?",
+                explanation: "Rana yang terbuka lama membuat kamera sangat rentan terhadap guncangan tangan, sehingga seluruh foto termasuk objek diam ikut blur (Camera Shake), bukan hanya air yang bergerak."
+            },
+            {
+                id: 9,
+                title: "9. Suasana Kafe Jalanan Malam Kota",
+                desc: "Klien kafe ingin foto suasana malam yang tetap terang jelas namun **tanpa bintik noise berlebihan** untuk materi promosi Instagram.",
+                scene: "night",
+                targetEV: 0.0,
+                sceneEV: 7.0,
+                reqs: {
+                    maxNoiseIdx: 5
+                },
+                question: "Selain menaikkan ISO, cara apa lagi yang bisa dilakukan agar foto malam tetap terang tanpa banyak noise?",
+                explanation: "Fotografer dapat memperlambat Shutter Speed atau melebarkan bukaan diafragma untuk menangkap lebih banyak cahaya, sehingga tidak perlu menaikkan ISO terlalu tinggi."
+            },
+            {
+                id: 10,
+                title: "10. Pertandingan Sepak Bola Sore Mendung",
+                desc: "Media olahraga sekolah butuh foto pemain yang **membeku tajam** saat berlari mengejar bola, meski langit sedang mendung.",
+                scene: "runner",
+                targetEV: 0.0,
+                sceneEV: 7.5,
+                reqs: {
+                    minShutterIdx: 6,
+                    maxNoiseIdx: 4
+                },
+                question: "Mengapa cuaca mendung menyulitkan pemotretan aksi olahraga dibanding siang cerah?",
+                explanation: "Cahaya yang lebih sedikit memaksa fotografer memilih kombinasi ISO lebih tinggi atau bukaan lebih lebar agar Shutter Speed tetap cukup cepat untuk membekukan gerakan atlet."
+            },
+            {
+                id: 11,
+                title: "11. Potret Model Backlight Golden Hour",
+                desc: "Fotografer diminta menghasilkan potret dengan cahaya keemasan dari belakang model serta latar **bokeh artistik**.",
+                scene: "portrait",
+                targetEV: 0.0,
+                sceneEV: 8.0,
+                reqs: {
+                    maxApertureIdx: 2,
+                    maxNoiseIdx: 3
+                },
+                question: "Apa tantangan utama memotret dengan cahaya backlight (dari belakang subjek)?",
+                explanation: "Cahaya backlight membuat meter cahaya mudah tertipu, sehingga subjek utama berisiko menjadi siluet gelap jika eksposur tidak diseimbangkan dengan tepat."
+            },
+            {
+                id: 12,
+                title: "12. Sungai Deras di Hutan Gelap",
+                desc: "Klien dokumenter alam ingin rekaman aliran sungai deras yang **berkesan lembut mengalir** di tengah rimbunnya hutan yang minim cahaya.",
+                scene: "waterfall",
+                targetEV: 0.0,
+                sceneEV: 8.0,
+                reqs: {
+                    maxShutterIdx: 2,
+                    maxNoiseIdx: 3
+                },
+                question: "Mengapa memotret air mengalir di hutan gelap lebih menantang dibanding air terjun di tempat terang?",
+                explanation: "Minimnya cahaya memaksa penggunaan Shutter Speed lambat sekaligus ISO yang terkontrol, sehingga fotografer harus menyeimbangkan ketiga elemen segitiga eksposur secara lebih presisi."
+            },
+            {
+                id: 13,
+                title: "13. Jalan Tol Malam dengan Jejak Lampu Mobil",
+                desc: "Klien majalah otomotif menginginkan foto **jejak cahaya lampu mobil (light trail)** yang panjang dan artistik di malam hari.",
+                scene: "night",
+                targetEV: 0.0,
+                sceneEV: 5.5,
+                reqs: {
+                    maxShutterIdx: 2
+                },
+                question: "Mengapa Shutter Speed sangat lambat digunakan untuk menghasilkan efek light trail dari lampu kendaraan?",
+                explanation: "Rana yang terbuka lama merekam pergerakan titik cahaya lampu kendaraan secara terus-menerus sepanjang waktu pemotretan, sehingga membentuk garis jejak cahaya yang memanjang."
+            },
+            {
+                id: 14,
+                title: "14. Lomba Lari Estafet Indoor Gymnasium",
+                desc: "Panitia lomba dalam ruangan membutuhkan foto pelari yang **benar-benar beku tajam** meski pencahayaan gymnasium terbatas.",
+                scene: "runner",
+                targetEV: 0.0,
+                sceneEV: 6.5,
+                reqs: {
+                    minShutterIdx: 7,
+                    maxNoiseIdx: 5
+                },
+                question: "Mengapa memotret olahraga di dalam ruangan sering membutuhkan ISO jauh lebih tinggi dibanding di luar ruangan?",
+                explanation: "Pencahayaan indoor jauh lebih redup dibanding sinar matahari langsung, sehingga ISO tinggi diperlukan untuk tetap mempertahankan Shutter Speed cepat pembeku gerakan."
+            },
+            {
+                id: 15,
+                title: "15. Pemotretan Editorial Majalah Studio Minim Cahaya",
+                desc: "Majalah mode meminta konsep foto **artistik temaram** dengan latar belakang blur dramatis di studio berpencahayaan rendah.",
+                scene: "portrait",
+                targetEV: 0.0,
+                sceneEV: 6.5,
+                reqs: {
+                    maxApertureIdx: 1,
+                    maxNoiseIdx: 4
+                },
+                question: "Mengapa bukaan diafragma paling lebar (f/2.0 atau lebih kecil) sangat membantu di studio minim cahaya?",
+                explanation: "Bukaan sangat lebar memasukkan cahaya sebanyak mungkin ke sensor tanpa harus menaikkan ISO terlalu tinggi maupun memperlambat Shutter Speed secara berlebihan."
+            },
+            {
+                id: 16,
+                title: "16. Curug Tersembunyi Senja Temaram",
+                desc: "Komunitas pecinta alam ingin foto curug tersembunyi dengan efek air **mengalir lembut** saat cahaya senja mulai redup.",
+                scene: "waterfall",
+                targetEV: 0.0,
+                sceneEV: 7.0,
+                reqs: {
+                    maxShutterIdx: 2,
+                    maxNoiseIdx: 4
+                },
+                question: "Bagaimana strategi menjaga hasil foto tetap bersih (rendah noise) saat harus memotret di cahaya senja yang meredup?",
+                explanation: "Gunakan Shutter Speed selambat mungkin dan bukaan diafragma yang cukup lebar terlebih dahulu, sehingga kenaikan ISO dapat ditekan seminim mungkin."
+            },
+            {
+                id: 17,
+                title: "17. Festival Kembang Api Malam Tahun Baru",
+                desc: "Klien event organizer meminta foto kembang api malam tahun baru yang **terang jelas namun tetap bersih** dari bintik noise.",
+                scene: "night",
+                targetEV: 0.0,
+                sceneEV: 4.5,
+                reqs: {
+                    maxNoiseIdx: 3
+                },
+                question: "Mengapa fotografer profesional cenderung menghindari ISO sangat tinggi saat memotret momen malam penting seperti kembang api?",
+                explanation: "ISO sangat tinggi memang membuat gambar terang, namun mengorbankan kualitas gambar akibat noise berlebih; kombinasi bukaan lebar dan rana lebih lambat lebih disarankan untuk hasil bersih."
+            },
+            {
+                id: 18,
+                title: "18. Balapan Sepeda BMX Malam Berlampu Sorot",
+                desc: "Event olahraga ekstrem malam hari membutuhkan foto atlet BMX yang **melompat beku tajam** di udara meski hanya mengandalkan lampu sorot panggung.",
+                scene: "runner",
+                targetEV: 0.0,
+                sceneEV: 5.5,
+                reqs: {
+                    minShutterIdx: 7,
+                    maxNoiseIdx: 5
+                },
+                question: "Mengapa memotret aksi ekstrem malam hari dianggap kombinasi tersulit dalam segitiga eksposur?",
+                explanation: "Fotografer harus mempertahankan Shutter Speed sangat cepat untuk membekukan gerakan cepat, sekaligus menaikkan ISO tinggi karena cahaya yang tersedia sangat terbatas di malam hari."
+            },
+            {
+                id: 19,
+                title: "19. Potret Prewedding Outdoor Mendung Gerimis",
+                desc: "Calon pengantin ingin sesi foto prewedding tetap berjalan meski cuaca mendung gerimis, dengan latar **bokeh lembut romantis**.",
+                scene: "portrait",
+                targetEV: 0.0,
+                sceneEV: 7.5,
+                reqs: {
+                    maxApertureIdx: 2,
+                    maxNoiseIdx: 3
+                },
+                question: "Apa yang harus disesuaikan fotografer ketika cuaca berubah dari rencana awal yang cerah menjadi mendung?",
+                explanation: "Fotografer perlu melebarkan bukaan diafragma dan/atau menaikkan ISO secara terukur untuk mengkompensasi berkurangnya cahaya alami akibat cuaca mendung."
+            },
+            {
+                id: 20,
+                title: "20. Ujian Sertifikasi Master Fotografer DKV",
+                desc: "Tantangan Puncak: Abadikan suasana kota malam yang sangat temaram dengan hasil **terang presisi, bokeh halus, dan sepenuhnya bebas dari noise kasar**. Buktikan penguasaan penuh Segitiga Eksposur!",
+                scene: "night",
+                targetEV: 0.0,
+                sceneEV: 4.0,
+                reqs: {
+                    maxApertureIdx: 1,
+                    maxNoiseIdx: 4
+                },
+                question: "Mengapa penguasaan Segitiga Eksposur (Aperture, Shutter Speed, ISO) secara bersamaan menjadi kunci utama seorang fotografer profesional?",
+                explanation: "Ketiga elemen saling memengaruhi satu sama lain; mengubah satu elemen selalu membutuhkan penyesuaian pada elemen lainnya agar eksposur tetap seimbang sekaligus mencapai efek artistik (bokeh, freeze motion, atau motion blur) yang diinginkan klien."
             }
         ];
 
